@@ -5,6 +5,7 @@ var semver = require('semver');
 var crypto = require('crypto');
 var _ = require('underscore');
 var url = require('url');
+var utils = require('utils');
 
 var TIMEOUT = 10;
 
@@ -362,19 +363,6 @@ Downloader.prototype.moduleInfo = function(moduleId, callback) {
 	}, callback);
 };
 
-Downloader.prototype.semverMunge = function(version) {
-	if (!version) return;
-
-	var addNumber = function (arr, target) {
-		if (arr.length >= target) return arr;
-		arr.unshift('0');
-		if (arr.length < target) return arr = addNumber(arr, target);
-		return arr;
-	};
-
-	return addNumber(version.split('.'), 3).join('.');
-};
-
 Downloader.prototype.useBundled = function(moduleName, callback) {
 	var that = this;
 
@@ -386,8 +374,8 @@ Downloader.prototype.useBundled = function(moduleName, callback) {
 			if (!info[prop].version) info[prop].version = '0.0.0';
 		});
 
-		var installedVersion = that.semverMunge(info.installed.version);
-		var bundledVersion = that.semverMunge(info.bundled.version);
+		var installedVersion = utils.semverMunge(info.installed.version);
+		var bundledVersion = utils.semverMunge(info.bundled.version);
 
 		if(semver.gt(installedVersion, bundledVersion)) {
 			return callback(null, false);
@@ -494,8 +482,8 @@ Downloader.prototype.listAllModules = function(callback) {
 			_.each(info, function(locations, name) {
 				var bundledVersion = '0.0.0';
 				var installedVersion = '0.0.0';
-				if (locations.bundled) bundledVersion = _this.semverMunge(locations.bundled.version);
-				if (locations.installed) installedVersion = _this.semverMunge(locations.installed.version);
+				if (locations.bundled) bundledVersion = utils.semverMunge(locations.bundled.version);
+				if (locations.installed) installedVersion = utils.semverMunge(locations.installed.version);
 
 				if (semver.gt(bundledVersion, installedVersion)) var winningLocation = 'bundled';
 				if (semver.lt(bundledVersion, installedVersion)) var winningLocation = 'installed';

@@ -48,7 +48,6 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 		if (aborted) return callback();
 
 		var destPath = [that.downloadCache, file.sha].join('/');
-		var enclosingDestPath = [that.downloadCache, file.moduleDownloadLocation, files.localPath, file.localPath].join('/');
 
 		that.checkFile(file, function(err, comp) {
 			if (err) {

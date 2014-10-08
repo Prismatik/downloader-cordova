@@ -40,8 +40,7 @@ Downloader.prototype.downloadFile = function(file, callback) {
   };
 
   var fetchFailure = function(err) {
-    errs.push(err);
-    callback();
+    callback(err);
   };
 
   transfer.download(file.url, 'cdvfile://localhost/persistent/'+destPath, fetchSuccess, fetchFailure);

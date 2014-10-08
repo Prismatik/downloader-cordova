@@ -20,6 +20,7 @@ Downloader = function(){
     installed: ['cdvfile://localhost/persistent', this.modulePath].join('/'),
     bundled: ['cdvfile://localhost/bundle/www', this.bundlePath].join('/')
   };
+  this.currentDls = {};
   return this;
 };
 
@@ -34,12 +35,18 @@ Downloader.prototype.updateProgress = function(file, incomplete) {
 Downloader.prototype.downloadFile = function(file, callback) {
   var transfer = new window.parent.FileTransfer();
 
+  var id = Math.floor(Math.random() * (1 << 24)).toString(16);
+
+  _this.currentDls[id] = transfer;
+
   var fetchSuccess = function() {
+    delete _this.currentDls[id];
     that.updateProgress(file, false);
     callback();
   };
 
   var fetchFailure = function(err) {
+    delete _this.currentDls[id];
     callback(err);
   };
 
@@ -300,23 +307,17 @@ Downloader.prototype.removeModuleFromDevice = function(moduleId, callback) {
 };
 
 Downloader.prototype.cancelDownload = function(callback) {
-  if (!Object.keys(this.currentDls) > 0) return callback && callback(new Error('No current download'));
-
-  var closed = 0;
-  var that = this;
-
+  if (!callback) callback = function(){};
   this.emit('abort');
 
+  var closed = 0;
+
   _.each(this.currentDls, function(currentDl) {
-    currentDl.on('close', function() {
-      closed++;
-      if (closed === Object.keys(that.currentDls).length) {
-        that.emit('aborted');
-        return callback(null);
-      }
-    });
-    currentDl.emit('close');
+    currentDl.abort();
   });
+
+  this.emit('aborted');
+  callback();
 };
 
 Downloader.prototype.moduleInfo = function(moduleId, callback) {

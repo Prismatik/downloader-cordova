@@ -25,12 +25,6 @@ Downloader = function(){
 
 Downloader.prototype = EventEmitter.prototype;
 
-Downloader.prototype.updateProgress = function(file, incomplete) {
-	if (!this.progress) return new Error("No progress object defined");
-	if (incomplete) return this.progress.bytes -= parseInt(file.size);
-	this.progress.bytes += parseInt(file.size);
-};
-
 Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 	var that = this;
 	
@@ -63,7 +57,6 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 			}
 
 			if (comp) {
-				that.updateProgress(file, false);
 				that.emit('file', file);
 				return callback();
 			};
@@ -71,7 +64,6 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 			var transfer = new window.parent.FileTransfer();
 
 			var fetchSuccess = function() {
-				that.updateProgress(file, false);
 				that.emit('file', file);
 				callback();
 			};
@@ -115,7 +107,6 @@ Downloader.prototype.cacheCheck = function(files, callback) {
 			if (err) errs.push(err);
 			if (!comp) {
 				complete = false;
-				that.updateProgress(file, true);
 			}
 			callback();
 		});

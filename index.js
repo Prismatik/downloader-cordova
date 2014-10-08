@@ -28,7 +28,23 @@ Downloader.prototype = EventEmitter.prototype;
 Downloader.prototype.updateProgress = function(file, incomplete) {
 	if (!this.progress) return new Error("No progress object defined");
 	if (incomplete) return this.progress.bytes -= parseInt(file.size);
-	this.progress.bytes += parseInt(file.size);
+	return this.progress.bytes += parseInt(file.size);
+};
+
+Downloader.prototype.downloadFile = function(file, callback) {
+	var transfer = new window.parent.FileTransfer();
+
+	var fetchSuccess = function() {
+		that.updateProgress(file, false);
+		callback();
+	};
+
+	var fetchFailure = function(err) {
+		errs.push(err);
+		callback();
+	};
+
+	transfer.download(file.url, 'cdvfile://localhost/persistent/'+destPath, fetchSuccess, fetchFailure);
 };
 
 Downloader.prototype.downloadModuleToDevice = function(module, callback) {
@@ -67,21 +83,16 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 				return callback();
 			};
 
-			var transfer = new window.parent.FileTransfer();
+			that.downloadFile(file, function(err) {
+				if (err) {
+					console.log('error while downloading file', err, file);
+					errs.push(err);
+				};
 
-			var fetchSuccess = function() {
-				that.updateProgress(file, false);
 				that.emit('file', file);
-				callback();
-			};
 
-			var fetchFailure = function(err) {
-				console.error('failed to fetch', file, err);
-				errs.push(err);
-				callback();
-			};
-
-			transfer.download(file.url, 'cdvfile://localhost/persistent/'+destPath, fetchSuccess, fetchFailure);
+				return callback();
+			});
 
 		});
 

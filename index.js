@@ -434,7 +434,6 @@ Downloader.prototype.listEntries = function(handle, callback) {
 
 Downloader.prototype.listAllModules = function(callback) {
   var _this = this;
-  window.debugfs = _this.fs;
   async.parallel({
     installed: function(callback) {
       _this.fs.root.getDirectory(_this.modulePath, {}, function(handle) {

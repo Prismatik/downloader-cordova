@@ -324,22 +324,8 @@ Downloader.prototype.cancelDownload = function(callback) {
 Downloader.prototype.moduleInfo = function(moduleId, callback) {
   var that = this;
 
-  var fetchInfo = function(targetPath, callback) {
-    fetchJsonInfo([targetPath, 'version.json'].join('/'), function(err, data) {
-      if (err === null && data === null) {
-        fetchStringInfo([targetPath, 'VERSION'].join('/'), function(err, data) {
-          if (data) data.complete = true;
-          callback(err, data);
-        });
-      } else {
-        if (data) data.complete = true;
-        callback(err, data);
-      }
-    });
-  };
-
-  var fetchJsonInfo = function(path, callback) {
-    request.get({uri: path, timeout: TIMEOUT}, function(err, res, data) {
+  var fetchInfo = function(path, callback) {
+    request.get({uri: path+'/version.json', timeout: TIMEOUT}, function(err, res, data) {
       if (err && err.code === 'ETIMEDOUT') return callback(null, null);
       if (res.statusCode === 404) return callback(null, null);
       if (err) return callback(err, null);
@@ -350,15 +336,6 @@ Downloader.prototype.moduleInfo = function(moduleId, callback) {
         err = e;
       }
       callback(err, info);
-    });
-  };
-
-  var fetchStringInfo = function(path, callback) {
-    request.get({uri: path, timeout: TIMEOUT}, function(err, res, data) {
-      if (err && err.code === 'ETIMEDOUT') return callback(null, null);
-      if (res.statusCode === 404) return callback(null, null);
-      if (err) return callback(err, null);
-      callback(err, {version: data.toString()});
     });
   };
 

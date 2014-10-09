@@ -351,7 +351,7 @@ Downloader.prototype.moduleInfo = function(moduleId, callback) {
   }, callback);
 };
 
-Downloader.prototype.useBundled = function(moduleName, callback) {
+Downloader.prototype.bundledOrInstalled = function(moduleName, callback) {
   var that = this;
 
   this.moduleInfo(moduleName, function(err, info) {
@@ -362,27 +362,22 @@ Downloader.prototype.useBundled = function(moduleName, callback) {
       if (!info[prop].version) info[prop].version = '0.0.0';
     });
 
-    var installedVersion = utils.semverMunge(info.installed.version);
-    var bundledVersion = utils.semverMunge(info.bundled.version);
+    var installedVersion = mungeSemver(info.installed.version);
+    var bundledVersion = mungeSemver(info.bundled.version);
 
     if(semver.gt(installedVersion, bundledVersion)) {
-      return callback(null, false);
+      return callback(null, {loc: 'installed', version: installedVersion});
     } else {
-      return callback(null, true);
+      return callback(null, {loc: 'bundled', version: bundledVersion});
     }
   });
 };
 
 Downloader.prototype.getNavigationUrl = function(navId, callback) {
   var that = this;
-  this.useBundled(navId, function(err, useBundled) {
+  this.bundledOrInstalled(navId, function(err, info) {
     if (err) return callback(err);
-    if(!useBundled) {
-      var navPath = ['cdvfile://localhost/persistent', that.modulePath, navId, 'index.html'].join('/');
-    } else {
-      var navPath = ['cdvfile://localhost/bundle/www', that.bundlePath, navId, 'index.html'].join('/');
-    };
-    return callback(null, navPath);
+    return callback(null, [that.rootPaths[info.loc], navId, 'index.html'].join('/'));
   });
 };
 

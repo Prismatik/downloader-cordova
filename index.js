@@ -5,7 +5,7 @@ var semver = require('semver');
 var crypto = require('crypto');
 var _ = require('underscore');
 var url = require('url');
-var utils = require('utils');
+var mungeSemver = require('munge-semver');
 
 var TIMEOUT = 10;
 
@@ -464,8 +464,8 @@ Downloader.prototype.listAllModules = function(callback) {
       _.each(info, function(locations, name) {
         var bundledVersion = '0.0.0';
         var installedVersion = '0.0.0';
-        if (locations.bundled) bundledVersion = utils.semverMunge(locations.bundled.version);
-        if (locations.installed) installedVersion = utils.semverMunge(locations.installed.version);
+        if (locations.bundled) bundledVersion = mungeSemver(locations.bundled.version);
+        if (locations.installed) installedVersion = mungeSemver(locations.installed.version);
 
         if (semver.gt(bundledVersion, installedVersion)) var winningLocation = 'bundled';
         if (semver.lt(bundledVersion, installedVersion)) var winningLocation = 'installed';

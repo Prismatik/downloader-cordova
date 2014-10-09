@@ -286,7 +286,7 @@ Downloader.prototype.downloadAndVerify = function(module, onUpdate, callback) {
   iterate()
 };
 
-Downloader.prototype.deleteModule = function(moduleId, type, callback) {
+Downloader.prototype.removeModuleFromDevice = function(moduleId, callback) {
   var that = this;
 
   var targetPath = [that.modulePath, moduleId].join('/');
@@ -306,13 +306,6 @@ Downloader.prototype.deleteModule = function(moduleId, type, callback) {
   }
   that.fs.root.getDirectory(targetPath, {exclusive: false}, success, failure);
 }
-
-Downloader.prototype.removeModuleFromDevice = function(moduleId, callback) {
-  this.deleteModule(moduleId, 'cache', function(err) {
-    if (err) return callback(err);
-    return callback(null);
-  });
-};
 
 Downloader.prototype.cancelDownload = function(callback) {
   if (!callback) callback = function(){};

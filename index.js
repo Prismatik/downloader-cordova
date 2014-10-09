@@ -58,9 +58,15 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 
   var files = module.files;
 
+  var totalSize = 0;
+
+  files.forEach(function(file) {
+    totalSize += file.size;
+  });
+
   this.progress = {
     bytes: 0,
-    totalSize: files.totalSize
+    totalSize: totalSize
   };
 
   var errs = [];
@@ -93,8 +99,10 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
         if (err) {
           console.log('error while downloading file', err, file);
           errs.push(err);
+          return callback();
         };
 
+        that.updateProgress(file, false);
         that.emit('file', file);
 
         return callback();

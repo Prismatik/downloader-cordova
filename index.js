@@ -11,14 +11,21 @@ var TIMEOUT = 10;
 
 Downloader = function(){
   this.concurrency = 5;
-  this.downloadCache = '/tmp';
+  this.downloadCache = 'downloadCache';
   this.modulePath = ['installed'].join('/');
-  //this.bundlePath = ['..', 'bundled'].join('/');
   this.bundlePath = 'bundled'
   this.maxFailures = 3;
   this.rootPaths = {
-    installed: ['cdvfile://localhost/persistent', this.modulePath].join('/'),
-    bundled: ['cdvfile://localhost/bundle/www', this.bundlePath].join('/')
+    cdv: {
+      installed: ['cdvfile://localhost/library-nosync', this.modulePath].join('/'),
+      bundled: ['cdvfile://localhost/bundle/www', this.bundlePath].join('/'),
+      cache: ['cdvfile://localhost/cache/', this.downloadCache].join('/')
+    },
+    fs: {
+      installed: ['NoCloud', this.modulePath].join('/'),
+      bundled: [cordova.file.applicationDirectory, 'www', this.bundlePath].join('/'),
+      cache: ['Caches', this.downloadCache].join('/')
+    }
   };
   this.currentDls = {};
   return this;
@@ -33,15 +40,16 @@ Downloader.prototype.updateProgress = function(file, incomplete) {
 };
 
 Downloader.prototype.downloadFile = function(file, callback) {
+  var _this = this;
   var transfer = new window.parent.FileTransfer();
 
   var id = Math.floor(Math.random() * (1 << 24)).toString(16);
 
-  _this.currentDls[id] = transfer;
+  this.currentDls[id] = transfer;
 
   var fetchSuccess = function() {
     delete _this.currentDls[id];
-    that.updateProgress(file, false);
+    _this.updateProgress(file, false);
     callback();
   };
 
@@ -50,7 +58,7 @@ Downloader.prototype.downloadFile = function(file, callback) {
     callback(err);
   };
 
-  transfer.download(file.url, 'cdvfile://localhost/persistent/'+destPath, fetchSuccess, fetchFailure);
+  transfer.download(file.url, this.rootPaths.cdv.cache+'/'+file.sha, fetchSuccess, fetchFailure);
 };
 
 Downloader.prototype.downloadModuleToDevice = function(module, callback) {
@@ -80,8 +88,6 @@ Downloader.prototype.downloadModuleToDevice = function(module, callback) {
 
   var queue = async.queue(function(file, callback) {
     if (aborted) return callback();
-
-    var destPath = [that.downloadCache, file.sha].join('/');
 
     that.checkFile(file, function(err, comp) {
       if (err) {
@@ -157,7 +163,7 @@ Downloader.prototype.cacheCheck = function(files, callback) {
 };
 
 Downloader.prototype.checkFile = function(file, callback) {
-  var destPath = [this.downloadCache, file.sha].join('/');
+  var destPath = [this.rootPaths.fs.cache, file.sha].join('/');
 
   var success = function(fileHandle) {
     var success = function(metadata) {
@@ -187,8 +193,8 @@ Downloader.prototype.checkFile = function(file, callback) {
 Downloader.prototype.copyModuleIntoPlace = function(module, callback) {
   var _this = this;
   var queue = async.queue(function(file, callback) {
-    var destParent = [_this.modulePath, module._id, file.localPath].join('/');
-    var source = [_this.downloadCache, file.sha].join('/');
+    var destParent = [_this.rootPaths.fs.installed, module._id, file.localPath].join('/');
+    var source = [_this.rootPaths.fs.cache, file.sha].join('/');
     _this.mkdirp(destParent, function(err) {
       if (err) return callback(err);
 
@@ -236,7 +242,7 @@ Downloader.prototype.removeFileIfExists = function(name, callback) {
 
 Downloader.prototype.writeVersionFile = function(module, callback) {
   var _this = this;
-  var targetFile = [this.modulePath, module._id, 'version.json'].join('/');
+  var targetFile = [this.rootPaths.fs.installed, module._id, 'version.json'].join('/');
   var success = function(entry) {
     var success = function(writer) {
       writer.onwrite = function() {
@@ -289,7 +295,7 @@ Downloader.prototype.downloadAndVerify = function(module, onUpdate, callback) {
 Downloader.prototype.removeModuleFromDevice = function(moduleId, callback) {
   var that = this;
 
-  var targetPath = [that.modulePath, moduleId].join('/');
+  var targetPath = [that.rootPaths.fs.installed, moduleId].join('/');
   var success = function(dirHandle) {
     var success = function() {
       return callback(null);
@@ -341,11 +347,11 @@ Downloader.prototype.moduleInfo = function(moduleId, callback) {
 
   async.parallel({
     installed: function(callback) {
-      var targetPath = ['cdvfile://localhost/persistent', that.modulePath, moduleId].join('/');
+      var targetPath = [that.rootPaths.cdv.installed, moduleId].join('/');
       fetchInfo(targetPath, callback);
     },
     bundled: function(callback) {
-      var targetPath = ['cdvfile://localhost/bundle/www', that.bundlePath, moduleId].join('/');
+      var targetPath = [that.rootPaths.cdv.bundled, moduleId].join('/');
       fetchInfo(targetPath, callback);
     }
   }, callback);
@@ -377,7 +383,7 @@ Downloader.prototype.getNavigationUrl = function(navId, callback) {
   var that = this;
   this.bundledOrInstalled(navId, function(err, info) {
     if (err) return callback(err);
-    return callback(null, [that.rootPaths[info.loc], navId, 'index.html'].join('/'));
+    return callback(null, [that.rootPaths.cdv[info.loc], navId, 'index.html'].join('/'));
   });
 };
 
@@ -431,7 +437,7 @@ Downloader.prototype.listAllModules = function(callback) {
   var _this = this;
   async.parallel({
     installed: function(callback) {
-      _this.fs.root.getDirectory(_this.modulePath, {}, function(handle) {
+      _this.fs.root.getDirectory(_this.rootPaths.fs.installed, {}, function(handle) {
         _this.listEntries(handle, callback);
       }, callback);
     },
@@ -472,7 +478,7 @@ Downloader.prototype.listAllModules = function(callback) {
 
         modules[name] = {
           version: locations[winningLocation].version,
-          url: [_this.rootPaths[winningLocation], name].join('/')
+          url: [_this.rootPaths.cdv[winningLocation], name].join('/')
         }
       });
       callback(err, modules);

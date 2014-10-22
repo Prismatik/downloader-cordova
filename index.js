@@ -15,6 +15,13 @@ Downloader = function(){
   this.modulePath = ['installed'].join('/');
   this.bundlePath = 'bundled'
   this.maxFailures = 3;
+  this.currentDls = {};
+  return this;
+};
+
+Downloader.prototype = EventEmitter.prototype;
+
+Downloader.prototype.init = function() {
   this.rootPaths = {
     cdv: {
       installed: ['cdvfile://localhost/library-nosync', this.modulePath].join('/'),
@@ -27,11 +34,7 @@ Downloader = function(){
       cache: ['Caches', this.downloadCache].join('/')
     }
   };
-  this.currentDls = {};
-  return this;
 };
-
-Downloader.prototype = EventEmitter.prototype;
 
 Downloader.prototype.updateProgress = function(file, incomplete) {
   if (!this.progress) return new Error("No progress object defined");

@@ -473,11 +473,12 @@ Downloader.prototype.listAllModules = function(callback) {
       _.each(info, function(locations, name) {
         var bundledVersion = '0.0.0';
         var installedVersion = '0.0.0';
+        var winningLocation = 'bundled';
         if (locations.bundled) bundledVersion = mungeSemver(locations.bundled.version);
         if (locations.installed) installedVersion = mungeSemver(locations.installed.version);
 
-        if (semver.gt(bundledVersion, installedVersion)) var winningLocation = 'bundled';
-        if (semver.lt(bundledVersion, installedVersion)) var winningLocation = 'installed';
+        if (semver.gt(bundledVersion, installedVersion)) winningLocation = 'bundled';
+        if (semver.lt(bundledVersion, installedVersion)) winningLocation = 'installed';
 
         modules[name] = {
           version: locations[winningLocation].version,

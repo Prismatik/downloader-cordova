@@ -354,7 +354,7 @@ Downloader.prototype.moduleInfo = function(moduleId, callback) {
       fetchInfo(targetPath, callback);
     },
     bundled: function(callback) {
-      var targetPath = [that.rootPaths.cdv.bundled, moduleId].join('/');
+      var targetPath = [that.rootPaths.fs.bundled, moduleId].join('/');
       fetchInfo(targetPath, callback);
     }
   }, callback);
@@ -482,7 +482,7 @@ Downloader.prototype.listAllModules = function(callback) {
 
         modules[name] = {
           version: locations[winningLocation].version,
-          url: [_this.rootPaths.cdv[winningLocation], name].join('/')
+          url: [_this.rootPaths.fs[winningLocation], name].join('/')
         }
       });
       callback(err, modules);

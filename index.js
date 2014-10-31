@@ -7,7 +7,7 @@ var _ = require('underscore');
 var url = require('url');
 var mungeSemver = require('munge-semver');
 
-var TIMEOUT = 10;
+var TIMEOUT = 100;
 
 Downloader = function(){
   this.concurrency = 5;

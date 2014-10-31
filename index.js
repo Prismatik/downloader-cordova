@@ -386,7 +386,7 @@ Downloader.prototype.getNavigationUrl = function(navId, callback) {
   var that = this;
   this.bundledOrInstalled(navId, function(err, info) {
     if (err) return callback(err);
-    return callback(null, [that.rootPaths.cdv[info.loc], navId, 'index.html'].join('/'));
+    return callback(null, [that.rootPaths.fs[info.loc], navId, 'index.html'].join('/'));
   });
 };
 

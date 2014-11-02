@@ -490,4 +490,13 @@ Downloader.prototype.listAllModules = function(callback) {
   });
 }
 
+Downloader.prototype.cdvToFs = function(url) {
+  var winner = {};
+  var match = _.each(this.rootPaths.cdv, function(path, id) {
+    if (url.indexOf(path) > -1) winner = {path: path, id: id};
+  });
+  if (!winner.path) return null;
+  return url.replace(winner.path, this.rootPaths.fs[winner.id])
+};
+
 module.exports = new Downloader();

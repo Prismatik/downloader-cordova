@@ -1,6 +1,6 @@
 {
   "name": "downloader-cordova",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Downloader module for cordova wrapper apps",
   "main": "index.js",
   "scripts": {
